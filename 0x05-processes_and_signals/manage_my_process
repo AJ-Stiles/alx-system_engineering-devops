@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+
+function start_process() {
+    echo "Starting manage_my_process..."
+    ./manage_my_process & echo $! > /var/run/my_process.pid
+    echo "manage_my_process started"
+}
+
+function stop_process() {
+    echo "Stopping manage_my_process..."
+    if [[ -f /var/run/my_process.pid ]]; then
+        pid=$(cat /var/run/my_process.pid)
+        kill "$pid"
+        rm /var/run/my_process.pid
+        echo "manage_my_process stopped"
+    else
+        echo "manage_my_process is not running"
+    fi
+}
+
+function restart_process() {
+    stop_process
+    start_process
+    echo "manage_my_process restarted"
+}
+
+function display_usage() {
+    echo "Usage: $0 {start|stop|restart}"
+}
+
+# Check the number of arguments passed to the script
+if [[ $# -ne 1 ]]; then
+    display_usage
+    exit 1
+fi
+
+case $1 in
+    start)
+        start_process
+        ;;
+    stop)
+        stop_process
+        ;;
+    restart)
+        restart_process
+        ;;
+    *)
+        display_usage
+        exit 1
+        ;;
+esac

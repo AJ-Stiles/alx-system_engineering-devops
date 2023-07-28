@@ -1,19 +1,21 @@
 #!/usr/bin/env bash
 
 function start_process() {
-    echo "Starting manage_my_process..."
     ./manage_my_process >> /tmp/my_process 2>&1 &
     echo $! > /var/run/my_process.pid
     echo "manage_my_process started"
 }
 
 function stop_process() {
-    echo "Stopping manage_my_process..."
     if [[ -f /var/run/my_process.pid ]]; then
         pid=$(cat /var/run/my_process.pid)
-        kill "$pid"
-        rm /var/run/my_process.pid
-        echo "manage_my_process stopped"
+        if kill -0 "$pid" 2>/dev/null; then
+            kill "$pid"
+            rm /var/run/my_process.pid
+            echo "manage_my_process stopped"
+        else
+            echo "manage_my_process is not running"
+        fi
     else
         echo "manage_my_process is not running"
     fi

@@ -1,7 +1,7 @@
 #!/usr/bin/python3
+import json
 import requests
 import sys
-import json
 
 if len(sys.argv) != 2:
     print("Usage: python3 gather_data_and_export_json.py <employee_id>")

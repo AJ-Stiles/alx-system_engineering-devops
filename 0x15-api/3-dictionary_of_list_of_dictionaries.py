@@ -1,28 +1,39 @@
 #!/usr/bin/python3
-import requests
 import json
+import requests
 
-base_url = "https://jsonplaceholder.typicode.com/users"
-todo_url = "https://jsonplaceholder.typicode.com/todos"
+# Fetch user and tasks data
+user_data = requests.get("https://jsonplaceholder.typicode.com/users").json()
+tasks_data = requests.get("https://jsonplaceholder.typicode.com/todos").json()
 
-user_data = requests.get(base_url).json()
-tasks_data = requests.get(todo_url).json()
+# Create a dictionary to store the tasks assigned to each user
+user_tasks_dict = {user["id"]: [] for user in user_data}
 
-task_dict = {}
+# Populate the dictionary with tasks
+for task in tasks_data:
+    user_id = task["userId"]
+    user_username = next((user["username"] for user in user_data
+                         if user["id"] == user_id), "")
+    user_tasks_dict[user_id].append({"username": user_username,
+                                    "task": task["title"],
+                                     "completed": task["completed"]})
 
+# Ensure all users exist in the output
 for user in user_data:
     user_id = user["id"]
-    username = user["username"]
-    user_tasks = []
+    if user_id not in user_tasks_dict:
+        user_tasks_dict[user_id] = []
 
-    for task in tasks_data:
-        if task["userId"] == user_id:
-            user_tasks.append({"username": username, "task": task["title"],
-                               "completed": task["completed"]})
+# Sort user IDs in ascending order
+sorted_user_ids = sorted(user_tasks_dict.keys())
 
-    task_dict[user_id] = user_tasks
+# Create a final dictionary with sorted user IDs
+sorted_user_tasks_dict = {user_id: user_tasks_dict[user_id]
+                          for user_id in sorted_user_ids}
 
-with open("todo_all_employees.json", "w") as file:
-    json.dump(task_dict, file)
+# Export data to JSON
+output_file = "todo_all_employees.json"
+with open(output_file, "w") as file:
+    json.dump(sorted_user_tasks_dict, file, indent=2)
 
-print("Data has been exported to todo_all_employees.json")
+print(f"Data has been exported to {output_file}")

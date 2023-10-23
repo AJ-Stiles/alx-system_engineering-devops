@@ -1,39 +1,31 @@
 #!/usr/bin/python3
+"""Accessing a REST API for todo lists of employees"""
+
 import json
 import requests
+import sys
 
-# Fetch user and tasks data
-user_data = requests.get("https://jsonplaceholder.typicode.com/users").json()
-tasks_data = requests.get("https://jsonplaceholder.typicode.com/todos").json()
 
-# Create a dictionary to store the tasks assigned to each user
-user_tasks_dict = {user["id"]: [] for user in user_data}
+if __name__ == '__main__':
+    url = "https://jsonplaceholder.typicode.com/users"
 
-# Populate the dictionary with tasks
-for task in tasks_data:
-    user_id = task["userId"]
-    user_username = next((user["username"] for user in user_data
-                         if user["id"] == user_id), "")
-    user_tasks_dict[user_id].append({"username": user_username,
-                                    "task": task["title"],
-                                     "completed": task["completed"]})
+    response = requests.get(url)
+    users = response.json()
 
-# Ensure all users exist in the output
-for user in user_data:
-    user_id = user["id"]
-    if user_id not in user_tasks_dict:
-        user_tasks_dict[user_id] = []
-
-# Sort user IDs in ascending order
-sorted_user_ids = sorted(user_tasks_dict.keys())
-
-# Create a final dictionary with sorted user IDs
-sorted_user_tasks_dict = {user_id: user_tasks_dict[user_id]
-                          for user_id in sorted_user_ids}
-
-# Export data to JSON
-output_file = "todo_all_employees.json"
-with open(output_file, "w") as file:
-    json.dump(sorted_user_tasks_dict, file, indent=2)
-
-print("Data has been exported to todo_all_employees.json")
+    dictionary = {}
+    for user in users:
+        user_id = user.get('id')
+        username = user.get('username')
+        url = 'https://jsonplaceholder.typicode.com/users/{}'.format(user_id)
+        url = url + '/todos/'
+        response = requests.get(url)
+        tasks = response.json()
+        dictionary[user_id] = []
+        for task in tasks:
+            dictionary[user_id].append({
+                "task": task.get('title'),
+                "completed": task.get('completed'),
+                "username": username
+            })
+    with open('todo_all_employees.json', 'w') as file:
+        json.dump(dictionary, file)
